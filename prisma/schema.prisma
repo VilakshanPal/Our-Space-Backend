@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum ConnectionRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum ConnectionStatus {
+  active
+  disconnected
+  blocked
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  email          String  @unique
+  username       String  @unique
+  firstName      String
+  lastName       String?
+  hashedPassword String
+
+  gender         Gender?
+  profilePicture String?
+  bio            String?
+
+  lastSeen  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Connection
+  connectionId Int?
+  connection   Connection? @relation("UserConnection", fields: [connectionId], references: [id])
+
+  // Requests
+  sentRequests     ConnectionRequest[] @relation("sentRequests")
+  receivedRequests ConnectionRequest[] @relation("ReceivedRequests")
+
+  moments Moment[] @relation("author")
+
+  momentReplies MomentReply[] @relation("author")
+}
+
+model ConnectionRequest {
+  id Int @id @default(autoincrement())
+
+  senderId         Int
+  receiverId       Int
+  connectionStatus ConnectionRequestStatus @default(pending)
+
+  sender    User     @relation("sentRequests", fields: [senderId], references: [id])
+  receiver  User     @relation("ReceivedRequests", fields: [receiverId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+}
+
+model Connection {
+  id    Int    @id @default(autoincrement())
+  users User[] @relation("UserConnection")
+
+  dayBook DayBook?
+
+  connectedAt DateTime         @default(now())
+  status      ConnectionStatus @default(active)
+  updatedAt   DateTime         @updatedAt
+}
+
+model DayBook {
+  id String @id @default(uuid())
+
+  connectionId Int        @unique
+  connection   Connection @relation(fields: [connectionId], references: [id])
+
+  moments Moment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Moment {
+  id        String  @id @default(uuid())
+  dayBookId String
+  dayBook   DayBook @relation(fields: [dayBookId], references: [id])
+
+  authorId Int
+  author   User @relation("author", fields: [authorId], references: [id])
+
+  imgUrl      String?
+  textMessage String?
+
+  //TODO: reaction String?
+  //TODO: reply String?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  momentReplies MomentReply[] @relation("moment")
+}
+
+model MomentReply {
+  id        String @id @default(uuid())
+  replyText String
+  momentId  String
+  authorId  Int
+
+  moment Moment @relation("moment", fields: [momentId], references: [id],onDelete: Cascade)
+  author User   @relation("author", fields: [authorId], references: [id])
+  // TODO: Reaction for reply
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
