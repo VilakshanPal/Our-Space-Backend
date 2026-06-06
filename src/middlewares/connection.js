@@ -39,3 +39,43 @@ export async function dayBookAuth(req, res, next) {
     });
   }
 }
+
+export async function chatAuth(req,res,next) {
+   try {
+    const userId = req.user.id;
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      include: {
+        connection: {
+          include: {
+            chat: true,
+          },
+        },
+      },
+    });
+
+    if (!user?.connection) {
+      throw new Error("No active connection found");
+    }
+
+    if (user.connection.status !== "active") {
+      throw new Error("Connection is not active");
+    }
+
+    if (!user.connection.chat) {
+      throw new Error("Chat not found");
+    }
+
+    req.connection = user.connection;
+    req.chat = user.connection.chat;
+
+    next();
+  } catch (err) {
+    return res.status(403).json({
+      status: "Error",
+      message: err.message,
+    });
+  }
+}

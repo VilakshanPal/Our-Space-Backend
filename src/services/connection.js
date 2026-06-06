@@ -84,20 +84,23 @@ export async function acceptConnectionRequest(connectionId, currentUserId) {
       data: {
         status: "active",
         users: {
-          connect: [
-            { id: connectionRequest.senderId },
-            { id: currentUserId },
-          ],
+          connect: [{ id: connectionRequest.senderId }, { id: currentUserId }],
         },
       },
       include: { users: true },
     });
 
     await tx.dayBook.create({
-      data:{
+      data: {
         connectionId: connection.id,
-      }
-    })
+      },
+    });
+
+    await tx.chat.create({
+      data: {
+        connectionId: connection.id,
+      },
+    });
 
     await tx.connectionRequest.update({
       where: {

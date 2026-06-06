@@ -53,6 +53,7 @@ model User {
   moments Moment[] @relation("author")
 
   momentReplies MomentReply[] @relation("author")
+  messages      Message[]
 }
 
 model ConnectionRequest {
@@ -75,6 +76,7 @@ model Connection {
   users User[] @relation("UserConnection")
 
   dayBook DayBook?
+  chat   Chat?
 
   connectedAt DateTime         @default(now())
   status      ConnectionStatus @default(active)
@@ -118,9 +120,35 @@ model MomentReply {
   momentId  String
   authorId  Int
 
-  moment Moment @relation("moment", fields: [momentId], references: [id],onDelete: Cascade)
+  moment Moment @relation("moment", fields: [momentId], references: [id], onDelete: Cascade)
   author User   @relation("author", fields: [authorId], references: [id])
   // TODO: Reaction for reply
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id           String     @id @default(uuid())
+  connectionId Int        @unique
+  connection   Connection @relation(fields: [connectionId], references: [id])
+
+  message Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id String @id @default(uuid())
+
+  chatId String?
+  chat   Chat?   @relation(fields: [chatId], references: [id])
+
+  senderId Int
+  sender   User @relation(fields: [senderId], references: [id])
+
+  textMessage String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
