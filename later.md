@@ -5,6 +5,11 @@ Daybook
 - moment reaction 
 - reply reaction
 
+Messaging
+- EDIT & DELETE chats
+- React Chats 
+- Tag Chats
+
 
 
 PRODUCT LVL 

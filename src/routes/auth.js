@@ -4,12 +4,14 @@ import bcrypt from "bcrypt";
 
 import { signupValidation } from "../utils/formValidation.js";
 import { signJWT } from "../utils/jwt.js";
+import { userAuth } from "../middlewares/auth.js";
 
 export const authRouter = express.Router();
 
 // --------------------- SIGNUP USER ---------------------
 authRouter.post("/signup", async (req, res) => {
   try {
+    console.log(req.body);
     signupValidation(req);
     const {
       email,
@@ -78,50 +80,107 @@ authRouter.post("/signup", async (req, res) => {
 // --------------------- LOGIN USER ---------------------
 authRouter.post("/login", async (req, res) => {
   try {
-    const { username, password, email } = req.body;
-    let user;
+    const { login, password } = req.body;
+
+    if (!login?.trim()) {
+      throw new Error("Email or username required");
+    }
 
     if (!password) {
       throw new Error("Password required");
     }
-    if (email) {
-      user = await prisma.user.findUnique({
-        where: { email },
-      });
-    } else if (username) {
-      user = await prisma.user.findUnique({
-        where: { username },
-      });
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email: login.trim().toLowerCase() }, { username: login.trim() }],
+      },
+    });
+
+    if (!user) {
+      throw new Error("Invalid Credentials");
     }
 
-    if (user) {
-      const verifyPassword = await bcrypt.compare(
-        password,
-        user.hashedPassword,
-      );
-      if (verifyPassword) {
-        const JWT = await signJWT({ id: user.id, email: user.email });
-        res.cookie("token", JWT, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 24 * 60 * 60 * 1000,
-        });
-        return res
-          .status(200)
-          .json({ status: "Success", message: "Login Successful" });
-      }
+    const verifyPassword = await bcrypt.compare(password, user.hashedPassword);
+
+    if (!verifyPassword) {
+      throw new Error("Invalid Credentials");
     }
-    throw new Error("Invalid Credentials");
+
+    const JWT = await signJWT({
+      id: user.id,
+      email: user.email,
+    });
+
+    res.cookie("token", JWT, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      status: "Success",
+      message: "Login Successful",
+    });
   } catch (err) {
-    res.status(400).json({ status: "Failed", message: err.message });
+    return res.status(400).json({
+      status: "Failed",
+      message: err.message,
+    });
   }
 });
 
 // --------------------- LOGOUT USER ---------------------
 authRouter.post("/logout", async (req, res) => {
   res.clearCookie("token").status(200).json({
- status:"Success",
- message:"Logout Successful"
-})
+    status: "Success",
+    message: "Logout Successful",
+  });
 });
+
+
+// --------------------- USERNAME AVAILABILITY CHECK ---------------------
+authRouter.get("/check-username", async (req, res) => {
+  try {
+    let user;
+    const userName = req.query.username;
+
+    if (userName) {
+      user = await prisma.user.findUnique({
+        where: {
+          username: userName,
+        },
+        select: {
+          id: true,
+          username: true,
+        },
+      });
+    }
+    if(user){
+      return res.status(200).json({
+        available: false,
+        message: "This username is already taken",
+      });
+    }
+    if(!user){
+      return res.status(200).json({
+        available: true,
+        message: "Username is Available"
+      })
+    }
+  } catch (err) {
+    return res.status(400).json({
+      status: "Failed",
+      message: err.message,
+    });
+  }
+});
+
+
+
+authRouter.get("/user", userAuth, async (req,res) =>{
+  let user = req.user
+  return res.status(200).json({
+    ...user
+  })
+})

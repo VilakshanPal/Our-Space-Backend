@@ -25,15 +25,6 @@ export async function getMoments(dayBookId, cursor) {
     where: {
       dayBookId: dayBookId,
     },
-include: {
-  author: {
-    select: {
-      id: true,
-      firstName: true,
-      profilePicture: true,
-    },
-  },
-  momentReplies: {
     include: {
       author: {
         select: {
@@ -42,12 +33,21 @@ include: {
           profilePicture: true,
         },
       },
+      momentReplies: {
+        include: {
+          author: {
+            select: {
+              id: true,
+              firstName: true,
+              profilePicture: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
     },
-    orderBy: {
-      createdAt: "asc",
-    },
-  },
-},
     take: 25,
     ...(cursor && {
       cursor: {
@@ -165,6 +165,15 @@ export async function getReplies(momentId, dayBookId, cursor) {
     where: {
       momentId: moment.id,
     },
+    include: {
+      author: {
+        select: {
+          id: true,
+          firstName: true,
+          profilePicture: true,
+        },
+      },
+    },
     take: 25,
     ...(cursor && {
       cursor: {
@@ -180,11 +189,7 @@ export async function getReplies(momentId, dayBookId, cursor) {
 }
 
 // * UPDATE MOMENT REPLY
-export async function editReply(
-  replyId,
-  userId,
-  replyText
-) {
+export async function editReply(replyId, userId, replyText) {
   const cleanReply = replyText?.trim();
 
   if (!cleanReply) {

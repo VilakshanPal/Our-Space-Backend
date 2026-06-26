@@ -1,4 +1,3 @@
-import { skip } from "node:test";
 import { prisma } from "../config/prisma.ts";
 
 //* CREATE MESSAGE
@@ -42,14 +41,7 @@ export async function getMessages(chatId, cursor) {
         },
         skip: 1,
       }),
-    orderBy: {
-      createdAt: "desc",
-    },
   });
-  if(!messages){
-    throw new Error("No message")
-  }
-
   return messages;
 }
 

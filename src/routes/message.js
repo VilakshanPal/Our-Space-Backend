@@ -68,7 +68,7 @@ chatRouter.patch("/message/:id", userAuth, chatAuth, async (req, res) => {
 });
 
 //* DELETE MESSAGE
-chatRouter.delete("message/:id", userAuth, chatAuth, async (req, res) => {
+chatRouter.delete("/message/:id", userAuth, chatAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const senderId = req.user.id;
