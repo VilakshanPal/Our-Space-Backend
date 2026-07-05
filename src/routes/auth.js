@@ -184,3 +184,4 @@ authRouter.get("/user", userAuth, async (req,res) =>{
     ...user
   })
 })
+

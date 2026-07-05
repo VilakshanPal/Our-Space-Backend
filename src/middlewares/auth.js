@@ -18,6 +18,9 @@ export async function userAuth(req, res, next) {
         username: true,
         email: true,
         connectionId: true,
+        firstName: true,
+        lastName: true,
+        profilePicture: true
       },
     });
     if (!user) {
