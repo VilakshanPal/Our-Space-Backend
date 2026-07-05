@@ -115,7 +115,7 @@ authRouter.post("/login", async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 72 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
