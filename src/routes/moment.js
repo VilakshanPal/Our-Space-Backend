@@ -21,6 +21,7 @@ export const momentRouter = express.Router();
 //* CREATE MOMENT
 momentRouter.post("/moment/create", userAuth, dayBookAuth, media, async (req, res) => {
   try {
+    console.log('test')
       const { message } = req.body;
       const textMessage = message?.trim();
       const hasMedia = req.file;

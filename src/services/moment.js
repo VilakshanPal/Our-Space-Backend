@@ -3,6 +3,9 @@ import cloudinary from "../config/cloudinary.js";
 
 // * CREATE MOMENTS
 export async function createMoment(textMessage, media, authorId, dayBookId) {
+  console.log('test')
+  console.log(textMessage, media, authorId, dayBookId)
+
   let cloudinaryImg = null;
   if (media) {
     cloudinaryImg = await cloudinary.uploader.upload(media);
